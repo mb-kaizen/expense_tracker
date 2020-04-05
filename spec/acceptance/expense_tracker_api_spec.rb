@@ -10,14 +10,47 @@ module ExpenseTracker
             ExpenseTracker::API.new
         end
 
+        def post_expense(expense)
+            post '/expenses', JSON.generate(expense)
+            expect(last_response.status).to eq(200)
+
+            parsed = JSON.parse(last_response.body)
+            expect(parsed).to include('expense_id' => a_kind_of(Integer))
+            expense.merge('id' => parsed['expense_id'])
+        end
+
         it 'records submitted expenses' do 
-            coffee = {
+            pending 'Need to persist expenses'
+            
+            coffee = post_expense(
                 'payee' => 'Starbucks',
-                'amount' => 5.75,
-                'date' => '2017-06-10'
-            }
+                'amount' => 575, 
+                'date' => '2019-06-10'
+            )
+
+            zoo = post_expense(
+                'payee' => 'Zoo',
+                'amount' => 1525, 
+                'date' => '2019-06-10'
+            )
+
+            groceries = post_expense(
+                'payee' => 'FoodCo',
+                'amount' => 9520, 
+                'date' => '2019-06-11'
+            )
+
+            get '/expenses/2019-06-10'
+            expect(last_response.status).to eq(200)
+
+            expenses = JSON.parse(last_response.body)
+            expect(expenses).to contain_exactly(coffee, zoo)
 
             post '/expenses', JSON.generate(coffee)
+            expect(last_response.status).to eq(200)
+
+            parsed = JSON.parse(last_response.body)
+            expect(parsed).to include('expense_id' => a_kind_of(Integer))
         end
     end 
 end
