@@ -12,14 +12,18 @@ module ExpenseTracker
         end
 
         let(:ledger) { instance_double('ExpenseTracker::Ledger') }
+        let(:parsed) { JSON.parse(last_response.body) }
+        
+        def check_response_includes(data)
+            expect(parsed).to include(data)
+        end
+
+        def check_response_body_eq(data)
+            expect(parsed).to eq(data)
+        end
         
         describe 'POST /expenses' do
-            let(:parsed) { JSON.parse(last_response.body) }
             let(:expense) { { 'some' => 'data' } }
-
-            def check_response_includes(key, value)
-                expect(parsed).to include(key => value)
-            end
 
             context 'when the expense is successfully recorded' do
                 before do
@@ -30,7 +34,7 @@ module ExpenseTracker
 
                 it 'returns the expense id' do
                     post '/expenses', JSON.generate(expense)
-                    check_response_includes('expense_id', 417)
+                    check_response_includes('expense_id' => 417)
                 end
 
                 it 'responds with a 200 (OK)' do
@@ -47,7 +51,7 @@ module ExpenseTracker
                 end
                 it 'returns and error message' do
                     post '/expenses', JSON.generate(expense)
-                    check_response_includes('error', 'Expense incomplete')
+                    check_response_includes('error' => 'Expense incomplete')
                 end
                 it 'responds with a 422 (Unprocessable entity)' do
                     post '/expenses', JSON.generate(expense)
@@ -57,14 +61,40 @@ module ExpenseTracker
         end
 
         describe 'GET /expenses/:date' do
-            context 'when expense exist on the given date' do
-                it 'returns the expense records as JSON'
-                it 'responds with a 200 (OK)'
+            context 'when expenses exist on the given date' do
+                before do
+                    allow(ledger).to receive(:expenses_on)
+                        .with('2020-04-13')
+                        .and_return(['expense_1', 'expense_2'])
+                end
+                it 'returns the expense records as JSON' do
+                    get '/expenses/2020-04-13'
+
+                    # parsed = JSON.parse(last_response.body)
+                    check_response_body_eq(['expense_1', 'expense_2'])
+                    # expect(parsed).to eq(['expense_1', 'expense_2'])
+                end
+                it 'responds with a 200 (OK)' do
+                    get '/expenses/2020-04-13'
+                    expect(last_response.status).to eq(200)
+                end
             end
 
             context 'when there are no expenses on the given date' do
-                it 'returns an empty array as JSON'
-                it 'responds with a 200 (OK)'
+                before do
+                    allow(ledger).to receive(:expenses_on)
+                        .with('2020-04-13')
+                        .and_return([])
+                end
+                it 'returns an empty array as JSON' do
+                    get 'expenses/2020-04-13'
+                    check_response_body_eq([])
+                end
+                it 'responds with a 200 (OK)' do
+                    get 'expenses/2020-04-13'
+                    
+                    expect(last_response.status).to eq(200)
+                end
             end
         end
     end
