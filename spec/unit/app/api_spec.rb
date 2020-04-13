@@ -14,35 +14,57 @@ module ExpenseTracker
         let(:ledger) { instance_double('ExpenseTracker::Ledger') }
         
         describe 'POST /expenses' do
-            context 'when the expense is successfully recorded' do
-                it 'returns the expense id' do
-                    expense = { 'some' => 'data' }
+            let(:parsed) { JSON.parse(last_response.body) }
+            let(:expense) { { 'some' => 'data' } }
 
+            def check_response_includes(key, value)
+                expect(parsed).to include(key => value)
+            end
+
+            context 'when the expense is successfully recorded' do
+                before do
                     allow(ledger).to receive(:record)
                         .with(expense)
                         .and_return(RecordResult.new(true, 417, nil))
+                end
 
+                it 'returns the expense id' do
                     post '/expenses', JSON.generate(expense)
-
-                    parsed = JSON.parse(last_response.body)
-                    expect(parsed).to include('expense_id' => 417)
+                    check_response_includes('expense_id', 417)
                 end
 
                 it 'responds with a 200 (OK)' do
-                    expense = { 'some' => 'data' }
-
-                    allow(ledger).to receive(:record)
-                        .with(expense)
-                        .and_return(RecordResult.new(true, 417, nil))
-
                     post '/expenses', JSON.generate(expense)
                     expect(last_response.status).to eq(200)
                 end
             end
 
             context 'when the expense fails validation' do
-                it 'returns and error message'
-                it 'responds with a 422 (Unprocessable entity'
+                before do
+                    allow(ledger).to receive(:record)
+                        .with(expense)
+                        .and_return(RecordResult.new(false, 417, 'Expense incomplete'))
+                end
+                it 'returns and error message' do
+                    post '/expenses', JSON.generate(expense)
+                    check_response_includes('error', 'Expense incomplete')
+                end
+                it 'responds with a 422 (Unprocessable entity)' do
+                    post '/expenses', JSON.generate(expense)
+                    expect(last_response.status).to eq(422)
+                end
+            end
+        end
+
+        describe 'GET /expenses/:date' do
+            context 'when expense exist on the given date' do
+                it 'returns the expense records as JSON'
+                it 'responds with a 200 (OK)'
+            end
+
+            context 'when there are no expenses on the given date' do
+                it 'returns an empty array as JSON'
+                it 'responds with a 200 (OK)'
             end
         end
     end

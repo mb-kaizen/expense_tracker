@@ -4,11 +4,11 @@ class API < Sinatra::Base
         super() # Rest of initialization from Sinatra
     end
     
-    result = @ledger.record({ 'some' => 'data' })
-    result.success? # => a Boolean
-    result.expense_id # => a number
-    result.error_message # => a string or nil
 end
 
 app = API.new(ledger: Ledger.new)
 
+result = @ledger.record({ 'some' => 'data' })
+result.success? # => a Boolean
+result.expense_id # => a number
+result.error_message # => a string or nil
