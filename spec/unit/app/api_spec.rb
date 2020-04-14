@@ -10,17 +10,17 @@ module ExpenseTracker
         def app
             API.new(ledger: ledger)
         end
-
-        let(:ledger) { instance_double('ExpenseTracker::Ledger') }
-        let(:parsed) { JSON.parse(last_response.body) }
         
         def check_response_includes(data)
             expect(parsed).to include(data)
         end
-
+        
         def check_response_body_eq(data)
             expect(parsed).to eq(data)
         end
+        
+        let(:ledger) { instance_double('ExpenseTracker::Ledger') }
+        let(:parsed) { JSON.parse(last_response.body) }
         
         describe 'POST /expenses' do
             let(:expense) { { 'some' => 'data' } }
@@ -70,9 +70,8 @@ module ExpenseTracker
                 it 'returns the expense records as JSON' do
                     get '/expenses/2020-04-13'
 
-                    # parsed = JSON.parse(last_response.body)
-                    check_response_body_eq(['expense_1', 'expense_2'])
-                    # expect(parsed).to eq(['expense_1', 'expense_2'])
+                    parsed = JSON.parse(last_response.body)
+                    expect(parsed).to eq(['expense_1', 'expense_2'])
                 end
                 it 'responds with a 200 (OK)' do
                     get '/expenses/2020-04-13'
@@ -92,7 +91,6 @@ module ExpenseTracker
                 end
                 it 'responds with a 200 (OK)' do
                     get 'expenses/2020-04-13'
-                    
                     expect(last_response.status).to eq(200)
                 end
             end
