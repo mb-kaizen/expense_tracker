@@ -1,5 +1,4 @@
 require_relative '../../../app/ledger'
-require_relative '../../../config/sequel'
 
 module ExpenseTracker
     RSpec.describe Ledger, :aggregate_failures, :db do
@@ -39,6 +38,23 @@ module ExpenseTracker
 
                     expect(DB[:expenses].count).to eq(0)
                 end
+            end
+        end
+
+        describe '#expenses_on' do
+            it 'returns all expenses for the provided date' do
+                result_1 = ledger.record(expense.merge('date' => '2020-04-13'))
+                result_2 = ledger.record(expense.merge('date' => '2020-04-13'))
+                result_3 = ledger.record(expense.merge('date' => '2020-04-14'))
+
+                expect(ledger.expenses_on('2020-04-13')).to contain_exactly(
+                    a_hash_including(id: result_1.expense_id),
+                    a_hash_including(id: result_2.expense_id)
+                )
+            end
+
+            it 'return a blank array when there are no matching expenses' do
+                expect(ledger.expenses_on('2020-04-15')).to eq([])
             end
         end
 

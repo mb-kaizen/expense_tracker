@@ -19,24 +19,22 @@ module ExpenseTracker
             expense.merge('id' => parsed['expense_id'])
         end
 
-        it 'records submitted expenses' do 
-            pending 'Need to persist expenses'
-            
+        it 'records submitted expenses' do             
             coffee = post_expense(
                 'payee' => 'Starbucks',
-                'amount' => 575, 
+                'amount' => 5.75, 
                 'date' => '2019-06-10'
             )
 
             zoo = post_expense(
                 'payee' => 'Zoo',
-                'amount' => 1525, 
+                'amount' => 15.25, 
                 'date' => '2019-06-10'
             )
 
             groceries = post_expense(
                 'payee' => 'FoodCo',
-                'amount' => 9520, 
+                'amount' => 95.20, 
                 'date' => '2019-06-11'
             )
 
@@ -45,12 +43,6 @@ module ExpenseTracker
 
             expenses = JSON.parse(last_response.body)
             expect(expenses).to contain_exactly(coffee, zoo)
-
-            post '/expenses', JSON.generate(coffee)
-            expect(last_response.status).to eq(200)
-
-            parsed = JSON.parse(last_response.body)
-            expect(parsed).to include('expense_id' => a_kind_of(Integer))
         end
     end 
 end
